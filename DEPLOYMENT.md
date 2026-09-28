@@ -83,28 +83,34 @@ x-hikari-trace: sin1.d1nj
 x-railway-edge: sin1
 Connection: keep-alive
 
-{"status":"ok","service":"day12-agent","version":"1.0.0"}HTTP/1.1 500 Internal Server Error
-Content-Type: text/plain; charset=utf-8
-Date: Mon, 28 Sep 2026 08:35:18 GMT
-Server: railway-hikari
-x-railway-request-id: 2QclnKozT8yXWWS9LPU1MQ
-Content-Length: 21
-x-hikari-trace: hkg1.hn7d
-x-railway-edge: hkg1
-Connection: keep-alive
+{"status":"ok","service":"day12-agent","version":"1.0.0"}
 
-Internal Server Errorcurl: (28) Failed to connect to day12-agent-production-c5c9.up.railway.app:443 after 21044 ms: Could not connect to server
-HTTP/1.1 422 Unprocessable Entity
+HTTP/1.1 401 Unauthorized
 Content-Type: application/json
-Date: Mon, 28 Sep 2026 08:35:39 GMT
+Date: Mon, 28 Sep 2026 09:04:10 GMT
 Server: railway-hikari
-x-railway-request-id: hUzUNN5zRKio4sHNpHNmDw
-Content-Length: 158
-x-hikari-trace: sin1.tr00
+x-railway-request-id: OpXeZtF7RI6tXReoWUN5dQ
+Content-Length: 39
+x-hikari-trace: sin1.98a6
 x-railway-edge: sin1
 Connection: keep-alive
 
-{"detail":[{"type":"json_invalid","loc":["body",1],"msg":"JSON decode error","input":{},"ctx":{"error":"Expecting property name enclosed in double quotes"}}]}422 422 422 422 422 422 422 422 422 422 422 422 000 000 000 
+{"detail":"invalid or missing API key"}
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Mon, 28 Sep 2026 09:04:11 GMT
+Server: railway-hikari
+x-railway-request-id: VyQnJVFMTLyN_6-eljLL4A
+Content-Length: 279
+x-hikari-trace: sin1.hs0s
+x-railway-edge: sin1
+vary: accept-encoding
+Connection: keep-alive
+
+{"answer":"Câu hỏi hay. Deploy là gì thường được giải quyết bằng cách chuẩn hóa môi trường chạy: cùng một image chạy giống nhau ở laptop và trên cloud.","user_id":"sv-test","history_length":0,"cost_usd":2.145e-05,"tokens":{"in":3,"out":35}}
+
+200 200 200 200 200 200 200 200 200 429 429 429 429 429 429
 ```
 
 ```
@@ -134,6 +140,4 @@ Không đăng ký được tài khoản cloud? Vẫn nộp được bài, nhưng
    `http://localhost:8000`
 5. Ghi rõ lý do không deploy được vào phần dưới đây:
 
-```
-(điền lý do nếu dùng phương án dự phòng, ngược lại xóa mục này)
-```
+*(Đã deploy thành công trên Railway nên bỏ qua phần này)*
