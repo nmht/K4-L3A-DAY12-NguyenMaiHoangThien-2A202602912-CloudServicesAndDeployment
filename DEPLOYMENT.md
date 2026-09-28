@@ -10,17 +10,17 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
-| Repo | (điền link repo K4-L3A-DAY12-HoVaTen-MSSV-CloudServicesAndDeployment) |
+| Họ và tên | Nguyễn Mai Hoàng Thiện |
+| Mã học viên | 2A202602912 |
+| Repo | https://github.com/nmht/K4-L3A-DAY12-NguyenMaiHoangThien-2A202602912-CloudServicesAndDeployment |
 
 ## Service
 
 | Mục | Nội dung |
 |-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Public URL | https://day12-agent-production-c5c9.up.railway.app |
+| Platform | Railway |
+| Ngày deploy | 28/09/2026 |
 
 ## Biến Môi Trường Đã Set Trên Cloud
 
@@ -30,7 +30,7 @@ Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
 |------|--------|---------|
 | `PORT` | ✅ | platform tự gán |
 | `AGENT_API_KEY` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
+| `REDIS_URL` | ✅ | redis://default:<password>@day12-redis.railway.internal:6379 |
 | `RATE_LIMIT_PER_MINUTE` | ✅ | 10 |
 | `MONTHLY_BUDGET_USD` | ✅ | 10.0 |
 | `LOG_LEVEL` | ✅ | INFO |
@@ -41,18 +41,18 @@ Thay `<URL>` bằng Public URL ở trên:
 
 ```bash
 # 1. Liveness — mong đợi 200 {"status":"ok"}
-curl -i <URL>/health
+curl -i https://day12-agent-production-c5c9.up.railway.app/health
 
 # 2. Readiness — mong đợi 200 {"status":"ready"} (đã nối được Redis)
-curl -i <URL>/ready
+curl -i https://day12-agent-production-c5c9.up.railway.app/ready
 
 # 3. Không có API key — mong đợi 401
-curl -i -X POST <URL>/ask \
+curl -i -X POST https://day12-agent-production-c5c9.up.railway.app/ask \
   -H "Content-Type: application/json" \
   -d '{"question":"Hello"}'
 
 # 4. Có API key — mong đợi 200 kèm câu trả lời
-curl -i -X POST <URL>/ask \
+curl -i -X POST https://day12-agent-production-c5c9.up.railway.app/ask \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $AGENT_API_KEY" \
   -H "X-User-Id: sv-test" \
@@ -60,7 +60,7 @@ curl -i -X POST <URL>/ask \
 
 # 5. Rate limit — gọi 15 lần, những lần cuối phải trả 429
 for i in $(seq 1 15); do
-  curl -s -o /dev/null -w "%{http_code} " -X POST <URL>/ask \
+  curl -s -o /dev/null -w "%{http_code} " -X POST https://day12-agent-production-c5c9.up.railway.app/ask \
     -H "Content-Type: application/json" \
     -H "X-API-Key: $AGENT_API_KEY" \
     -H "X-User-Id: sv-test" \
@@ -73,7 +73,45 @@ done; echo
 Dán output của các lệnh trên vào đây:
 
 ```
-(điền output)
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Mon, 28 Sep 2026 08:35:17 GMT
+Server: railway-hikari
+x-railway-request-id: k7xFycdfRQueS3rUCYBc-A
+Content-Length: 57
+x-hikari-trace: sin1.d1nj
+x-railway-edge: sin1
+Connection: keep-alive
+
+{"status":"ok","service":"day12-agent","version":"1.0.0"}HTTP/1.1 500 Internal Server Error
+Content-Type: text/plain; charset=utf-8
+Date: Mon, 28 Sep 2026 08:35:18 GMT
+Server: railway-hikari
+x-railway-request-id: 2QclnKozT8yXWWS9LPU1MQ
+Content-Length: 21
+x-hikari-trace: hkg1.hn7d
+x-railway-edge: hkg1
+Connection: keep-alive
+
+Internal Server Errorcurl: (28) Failed to connect to day12-agent-production-c5c9.up.railway.app:443 after 21044 ms: Could not connect to server
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/json
+Date: Mon, 28 Sep 2026 08:35:39 GMT
+Server: railway-hikari
+x-railway-request-id: hUzUNN5zRKio4sHNpHNmDw
+Content-Length: 158
+x-hikari-trace: sin1.tr00
+x-railway-edge: sin1
+Connection: keep-alive
+
+{"detail":[{"type":"json_invalid","loc":["body",1],"msg":"JSON decode error","input":{},"ctx":{"error":"Expecting property name enclosed in double quotes"}}]}422 422 422 422 422 422 422 422 422 422 422 422 000 000 000 
+```
+
+```
+Theo nguyên tắc Stateless (Phi trạng thái) của 12-factor app, các instance của ứng dụng không được phép lưu trữ state (như lịch sử trò chuyện, rate limit quota) trong RAM của chính nó. Nếu không tách Redis ra:
+
+Khi container bị restart hoặc crash, toàn bộ dữ liệu lịch sử sẽ bị mất (bị "mất trí nhớ").
+Khi scale hệ thống lên nhiều instance (ví dụ 3 containers), một user gọi API lần 1 vào container A, lần 2 request rơi vào container B sẽ không thấy lịch sử cũ đâu. Việc tách Redis ra làm một service độc lập đóng vai trò là "Single Source of Truth", đảm bảo tính nhất quán của State giữa mọi instance và không bị mất khi ứng dụng khởi động lại.
 ```
 
 ## Ảnh Chụp Màn Hình
